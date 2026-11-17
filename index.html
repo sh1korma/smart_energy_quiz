@@ -1,0 +1,896 @@
+
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Эко-квиз «Умная энергия»</title>
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #e0f2f1 0%, #e8f5e9 100%);
+            --primary-color: #2e7d32;
+            --primary-dark: #1b5e20;
+            --accent-color: #00bcd4;
+            --accent-hover: #0097a7;
+            --text-color: #263238;
+            --card-active: #81c784;
+            --card-disabled: #b0bec5;
+            --white: #ffffff;
+            --shadow: 0 8px 24px rgba(0,0,0,0.12);
+            --transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            color: var(--text-color);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 25px;
+            animation: fadeInDown 0.6s ease;
+        }
+
+        header h1 {
+            color: var(--primary-dark);
+            font-size: 2.2rem;
+            margin-bottom: 5px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+
+        header p {
+            font-size: 1.1rem;
+            color: #546e7a;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            background: rgba(255,255,255,0.7);
+            padding: 6px;
+            border-radius: 30px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            animation: fadeInDown 0.8s ease;
+        }
+
+        .tab-btn {
+            padding: 10px 25px;
+            border: none;
+            background: transparent;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-color);
+            cursor: pointer;
+            border-radius: 25px;
+            transition: var(--transition);
+        }
+
+        .tab-btn:hover {
+            background: rgba(46, 125, 50, 0.1);
+        }
+
+        .tab-btn.active {
+            background: var(--primary-color);
+            color: var(--white);
+            box-shadow: 0 4px 12px rgba(46, 125, 50, 0.3);
+        }
+
+        .tab-content {
+            display: none;
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+        .score-board {
+            background: var(--white);
+            padding: 15px 30px;
+            border-radius: 15px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: var(--primary-dark);
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            width: 100%;
+            max-width: 1000px;
+            animation: zoomIn 0.5s ease;
+        }
+
+        .reset-btn {
+            background: #ff5722;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: var(--transition);
+        }
+        .reset-btn:hover { 
+            background: #e64a19;
+            transform: scale(1.05);
+        }
+
+        .jeopardy-grid {
+            display: grid;
+            grid-template-columns: 200px repeat(5, 1fr);
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.4);
+            padding: 15px;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            overflow-x: auto;
+            width: 100%;
+            animation: zoomIn 0.6s ease;
+        }
+        .grid-header {
+            background: var(--primary-dark);
+            color: var(--white);
+            padding: 15px 10px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            min-height: 70px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .point-cell {
+            background: var(--white);
+            color: var(--primary-color);
+            font-size: 1.4rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid #c8e6c9;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: var(--transition);
+            min-height: 70px;
+            user-select: none;
+        }
+
+        .point-cell:hover:not(.disabled) {
+            background: var(--card-active);
+            color: var(--white);
+            transform: translateY(-5px) scale(1.03);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+        }
+
+        .point-cell.disabled {
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        .point-cell.cell-correct {
+            background: #81c784 !important;
+            color: var(--white) !important;
+            border-color: #2e7d32 !important;
+        }
+
+        .point-cell.cell-wrong {
+            background: var(--card-disabled) !important;
+            color: #78909c !important;
+            border-color: #b0bec5 !important;
+            opacity: 0.6;
+        }
+
+        .info-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 30px;
+            perspective: 1000px;
+        }
+        .flip-card { background-color: transparent; height: 200px; cursor: pointer; }
+        .flip-card-inner { position: relative; width: 100%; height: 100%; text-align: left; transition: transform 0.6s; transform-style: preserve-3d; }
+        .flip-card.flipped .flip-card-inner { transform: rotateY(180deg); }
+        .card-front, .card-back { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: 15px; padding: 20px; box-shadow: var(--shadow); overflow-y: auto; }
+        .card-front { background-color: var(--white); color: var(--text-color); border-left: 6px solid var(--accent-color); }
+        .card-back { background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%); color: white; transform: rotateY(180deg); display: flex; flex-direction: column; justify-content: center; }
+        .card-front h3 { color: var(--primary-dark); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+        .card-front p, .card-back p { font-size: 0.95rem; line-height: 1.5; }
+        .click-hint { font-size: 0.8rem; color: var(--accent-hover); display: block; margin-top: 10px; text-align: right; font-style: italic; }
+
+        .timer-wrapper {
+            width: 100%;
+            background: #e0e0e0;
+            height: 14px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .timer-bar {
+            height: 100%;
+            width: 100%;
+            background: #4caf50;
+            border-radius: 10px;
+            transition: width 1s linear, background-color 0.5s ease;
+        }
+        .timer-text { font-weight: bold; font-size: 1.05rem; color: #37474f; margin-bottom: 8px; display: block; }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        .modal { background: var(--white); width: 90%; max-width: 600px; padding: 30px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.3); transform: translateY(-50px) scale(0.9); transition: var(--transition); text-align: center; }
+        .modal-overlay.active .modal { transform: translateY(0) scale(1); }
+        .modal-topic { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; color: var(--accent-hover); font-weight: bold; margin-bottom: 10px; }
+        .modal-question { font-size: 1.3rem; font-weight: 600; margin-bottom: 20px; color: var(--text-color); }
+        .options-container { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+        .option-btn { background: #f1f8e9; border: 2px solid #d1e7dd; padding: 12px; border-radius: 10px; font-size: 1rem; cursor: pointer; text-align: left; transition: var(--transition); }
+        .option-btn:hover:not(:disabled) { background: #e8f5e9; transform: translateX(5px); border-color: var(--card-active); }
+        .option-btn.correct { background: #a5d6a7 !important; border-color: #2e7d32 !important; color: #1b5e20; font-weight: bold; }
+        .option-btn.wrong { background: #ef9a9a !important; border-color: #c62828 !important; color: #b71c1c; }
+        .explanation { background: #e0f7fa; border-left: 4px solid var(--accent-color); padding: 12px; border-radius: 4px; margin-top: 15px; font-size: 0.95rem; text-align: left; display: none; color: #006064; animation: fadeIn 0.4s ease; }
+        .modal-actions { display: flex; justify-content: center; gap: 15px; margin-top: 20px; }
+        .action-btn { padding: 10px 20px; font-size: 1rem; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; transition: var(--transition); }
+        .btn-check { background: var(--accent-color); color: white; }
+        .btn-check:hover { background: var(--accent-hover); transform: scale(1.05); }
+        .btn-check:disabled { background: #b0bec5; cursor: not-allowed; transform: none; }
+        .btn-hint { background: #ffb74d; color: #5d4037; }
+        .btn-hint:hover { background: #ffa726; transform: scale(1.05); }
+        
+        /* Блокируемая кнопка закрытия */
+        .btn-close { background: #cfd8dc; color: #37474f; }
+        .btn-close:hover:not(:disabled) { background: #b0bec5; }
+        .btn-close:disabled { background: #e0e0e0; color: #9e9e9e; cursor: not-allowed; transform: none; }
+
+        .author-card-centered { background: linear-gradient(135deg, #ffffff 0%, #f1f8e9 100%); border-top: 6px solid var(--primary-color); padding: 40px 30px; border-radius: 20px; box-shadow: var(--shadow); max-width: 600px; margin: 20px auto; text-align: center; transform: scale(0.95); transition: var(--transition); }
+        .author-card-centered:hover { transform: scale(1); box-shadow: 0 12px 32px rgba(46, 125, 50, 0.2); }
+        .author-card-centered h2 { color: var(--primary-dark); margin-bottom: 25px; font-size: 1.6rem; }
+        .author-card-centered p { font-size: 1.1rem; line-height: 1.8; color: #37474f; margin-bottom: 12px; }
+        .author-card-centered .role-label { color: #78909c; font-size: 0.9rem; text-transform: uppercase; font-weight: bold; margin-top: 15px; letter-spacing: 0.5px;}
+        .author-card-centered strong { color: var(--primary-dark); font-size: 1.2rem; }
+
+        .final-badge { font-size: 4rem; margin: 15px 0; animation: bounce 1s infinite alternate; }
+        .final-rank { font-size: 1.6rem; font-weight: bold; color: var(--primary-color); margin-bottom: 15px; }
+
+        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes zoomIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-10px); } }
+
+        @media (max-width: 768px) {
+            .jeopardy-grid { grid-template-columns: 120px repeat(5, 75px); gap: 8px; padding: 10px; }
+            .grid-header { font-size: 0.75rem; min-height: 60px; }
+            .point-cell { font-size: 1.1rem; min-height: 60px; }
+            .info-container { grid-template-columns: 1fr; }
+            header h1 { font-size: 1.6rem; }
+            .tabs { flex-direction: column; width: 100%; border-radius: 15px; }
+            .tab-btn { width: 100%; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>⚡ Эко-квиз «Умная энергия» 🌍</h1>
+        <p>Интерактивная игра по энергосбережению</p>
+    </header>
+
+    <div class="tabs">
+        <button id="btn-tab-info" class="tab-btn active" onclick="switchTab('info')">📖 Познавательный материал</button>
+        <button id="btn-tab-game" class="tab-btn" onclick="switchTab('game')">🎮 Игра-викторина</button>
+        <button id="btn-tab-author" class="tab-btn" onclick="switchTab('author')">👤 Автор проекта</button>
+    </div>
+
+    <!-- ВКЛАДКА ПОЗНАВАТЕЛЬНОГО МАТЕРИАЛА -->
+    <div id="tab-info" class="tab-content active">
+        <div class="info-container">
+            
+            <div class="flip-card" onclick="this.classList.toggle('flipped'); playSound('click');">
+                <div class="flip-card-inner">
+                    <div class="card-front">
+                        <h3>💡 Энергия дома</h3>
+                        <p><strong>Класс энергоэффективности:</strong> Бытовая техника маркируется латинскими буквами от A+++ до G. Приборы класса «А+++» тратят почти на 50% меньше энергии, чем приборы класса «А» прошлых поколений.</p>
+                        <span class="click-hint">Нажми, чтобы перевернуть 🔄</span>
+                    </div>
+                    <div class="card-back">
+                        <p>🍏 <strong>Эко-совет:</strong> При покупке техники домой всегда выбирайте приборы с зелёной маркировкой А+++. Это сэкономит семейный бюджет и сбережёт ресурсы планеты!</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flip-card" onclick="this.classList.toggle('flipped'); playSound('click');">
+                <div class="flip-card-inner">
+                    <div class="card-front" style="border-left-color: #2196f3;">
+                        <h3>💧 Вода — это жизнь</h3>
+                        <p><strong>Скрытые утечки:</strong> Слегка подтекающий сливной бачок унитаза может незаметно «сливать» до 200 литров чистой воды в сутки. Капающий кран тратит около 24 литров в сутки.</p>
+                        <span class="click-hint">Нажми, чтобы перевернуть 🔄</span>
+                    </div>
+                    <div class="card-back">
+                        <p>🌊 <strong>Эко-совет:</strong> Вовремя чините сантехнику! Установите на краны специальные сеточки-аэраторы — они уменьшают расход воды в 2 раза, смешивая её с воздухом.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="flip-card" onclick="this.classList.toggle('flipped'); playSound('click');">
+                <div class="flip-card-inner">
+                    <div class="card-front" style="border-left-color: #ff9800;">
+                        <h3>🚀 Умные технологии</h3>
+                        <p><strong>Эволюция света:</strong> Старая лампа накаливания превращает в свет всего 5% энергии, а 95% уходит в тепло. Светодиодные (LED) лампы работают до 50 раз дольше и потребляют в 8-10 раз меньше энергии.</p>
+                        <span class="click-hint">Нажми, чтобы перевернуть 🔄</span>
+                    </div>
+                    <div class="card-back">
+                        <p>⚡ <strong>Эко-совет:</strong> Замените все лампы в доме на светодиодные. Они окупаются за несколько месяцев и служат долгие годы, снижая нагрузку на электросети.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flip-card" onclick="this.classList.toggle('flipped'); playSound('click');">
+                <div class="flip-card-inner">
+                    <div class="card-front" style="border-left-color: #9c27b0;">
+                        <h3>♻️ Эко-привычки</h3>
+                        <p><strong>Вторая жизнь вещей:</strong> Переработка одной алюминиевой банки из-под газировки экономит столько энергии, сколько нужно для работы компьютера в течение 3 часов! Раздельный сбор отходов спасает экологию.</p>
+                        <span class="click-hint">Нажми, чтобы перевернуть 🔄</span>
+                    </div>
+                    <div class="card-back">
+                        <p>🍁 <strong>Эко-совет:</strong> Собирайте макулатуру и пластик отдельно. Сдавая отходы в переработку, вы спасаете деревья от вырубки и уменьшаете горы мусора на свалках.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flip-card" onclick="this.classList.toggle('flipped'); playSound('click');">
+                <div class="flip-card-inner">
+                    <div class="card-front" style="border-left-color: #e91e63;">
+                        <h3>🌳 Чистый воздух и леса</h3>
+                        <p><strong>Деревья-спасатели:</strong> Одно взрослое дерево способно за год произвести около 120 килограммов кислорода. Этого достаточно для дыхания целой семьи из трех человек в течение всего года!</p>
+                        <span class="click-hint">Нажми, чтобы перевернуть 🔄</span>
+                    </div>
+                    <div class="card-back">
+                        <p>🌲 <strong>Эко-совет:</strong> Берегите зелёные насаждения и участвуйте в школьных акциях по посадке деревьев. Чем больше зелени вокруг, тем чище воздух, которым мы дышим.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flip-card" onclick="this.classList.toggle('flipped'); playSound('click');">
+                <div class="flip-card-inner">
+                    <div class="card-front" style="border-left-color: #ff5722;">
+                        <h3>📱 Цифровой эко-след</h3>
+                        <p><strong>Энергия интернета:</strong> Каждое электронное письмо, сохраненная картинка в облаке или просмотр видео онлайн требуют работы серверов. Один клик в поисковике выделяет около 0.2 грамма CO2.</p>
+                        <span class="click-hint">Нажми, чтобы перевернуть 🔄</span>
+                    </div>
+                    <div class="card-back">
+                        <p>💻 <strong>Эко-совет:</strong> Удаляйте ненужные письма и старые файлы из облачных хранилищ. Чистота в цифровом пространстве тоже помогает экономить мировую электроэнергию!</p>
+                    </div>
+                </div>
+            </div>
+            <div class="flip-card" onclick="this.classList.toggle('flipped'); playSound('click');">
+                <div class="flip-card-inner">
+                    <div class="card-front" style="border-left-color: #009688;">
+                        <h3>🔋 Батарейки-вредители</h3>
+                        <p><strong>Опасные отходы:</strong> Всего одна выброшенная в мусорный бак пальчиковая батарейка способна отравить тяжелыми металлами до 20 квадратных метров земли или 400 литров грунтовой воды.</p>
+                        <span class="click-hint">Нажми, чтобы перевернуть 🔄</span>
+                    </div>
+                    <div class="card-back">
+                        <p>🦊 <strong>Эко-совет:</strong> Никогда не выбрасывайте батарейки и старые телефоны вместе с обычным мусором. Сдавайте их в специальные контейнеры в магазинах или школе.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flip-card" onclick="this.classList.toggle('flipped'); playSound('click');">
+                <div class="flip-card-inner">
+                    <div class="card-front" style="border-left-color: #795548;">
+                        <h3>🛍 Осознанная мода</h3>
+                        <p><strong>Ресурсы на одежду:</strong> Производство одежды требует колоссальных объемов воды. На создание всего лишь одной обычной хлопковой футболки уходит около 2700 литров пресной воды.</p>
+                        <span class="click-hint">Нажми, чтобы перевернуть 🔄</span>
+                    </div>
+                    <div class="card-back">
+                        <p>👕 <strong>Эко-совет:</strong> Не покупайте лишние вещи, которые наденете всего один раз. Относитесь к одежде бережно, а то, что стало мало — отдавайте на благотворительность или переработку.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flip-card" onclick="this.classList.toggle('flipped'); playSound('click');">
+                <div class="flip-card-inner">
+                    <div class="card-front" style="border-left-color: #ffeb3b;">
+                        <h3>💨 Теплоизоляция</h3>
+                        <p><strong>Утечки тепла:</strong> Около 30% всего тепла из квартир зимой теряется через неутепленные двери, старые окна и вентиляцию. Простые резиновые уплотнители помогают существенно сохранить уют.</p>
+                        <span class="click-hint">Нажми, чтобы перевернуть 🔄</span>
+                    </div>
+                    <div class="card-back">
+                        <p>🏠 <strong>Эко-совет:</strong> Следите за тем, чтобы двери в подъезд и окна дома были плотно закрыты зимой. Закрывайте плотные шторы на ночь — они удержат тепло в комнате.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flip-card" onclick="this.classList.toggle('flipped'); playSound('click');">
+                <div class="flip-card-inner">
+                    <div class="card-front" style="border-left-color: #607d8b;">
+                        <h3>☀️ Естественный свет</h3>
+                        <p><strong>Чистые стекла:</strong> Регулярное мытье окон повышает уровень освещенности в комнате на 10-15%. Пыльные стекла задерживают естественный солнечный свет.</p>
+                        <span class="click-hint">Нажми, чтобы перевернуть 🔄</span>
+                    </div>
+                    <div class="card-back">
+                        <p>☀ <strong>Эко-совет:</strong> Чаще протирайте окна и не загромождайте подоانتники высокими цветами. Это позволит дольше использовать бесплатный солнечный свет вместо ламп!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- ВКЛАДКА ИГРЫ-ВИКТОРИНЫ -->
+    <div id="tab-game" class="tab-content">
+        <div class="score-board">
+            <span>🏆 Набранные баллы: <span id="total-score">0</span></span>
+            <button class="reset-btn" onclick="resetGame()">🔄 Сбросить игру</button>
+        </div>
+        
+        <div class="jeopardy-grid" id="game-board">
+            <!-- Сетка сгенерируется через JS -->
+        </div>
+    </div>
+
+    <!-- ИНТЕРАКТИВНАЯ ВКЛАДКА: АВТОР ПРОЕКТА -->
+    <div id="tab-author" class="tab-content">
+        <div class="author-card-centered">
+            <h2>👤 Сведения об авторах проекта</h2>
+            
+            <p class="role-label">Разработчик проекта</p>
+            <p><strong>Костюкова Марина Владимировна</strong><br>учащаяся 10 "А" класса</p>
+            <p>Государственное учреждение образования<br><strong>«Средняя школа №1 г.п. Корма»</strong></p>
+            
+            <p class="role-label">Руководитель</p>
+            <p><strong>Левоненко Татьяна Александровна</strong><br>учитель информатики</p>
+        </div>
+    </div>
+    <!-- МОДАЛЬНОЕ ОКНО ДЛЯ ВОПРОСОВ -->
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="modal">
+            <div class="modal-topic" id="modal-topic">Тема</div>
+            
+            <div id="timer-container">
+                <span class="timer-text">⏱️ Осталось времени: <span id="timer-seconds">15</span> сек.</span>
+                <div class="timer-wrapper">
+                    <div class="timer-bar" id="timer-bar"></div>
+                </div>
+            </div>
+
+            <div class="modal-question" id="modal-question">Вопрос</div>
+            <div class="options-container" id="options-container"></div>
+
+            <div class="explanation" id="explanation-box">
+                💡 <strong>Пояснение:</strong> <span id="explanation-text">Описание</span>
+            </div>
+
+            <div class="modal-actions">
+                <button class="action-btn btn-hint" id="btn-hint" onclick="showAnswer()">👀 Показать ответ</button>
+                <button class="action-btn btn-check" id="btn-check" onclick="checkSelectedAnswer()" disabled>✔️ Проверить</button>
+                <button class="action-btn btn-close" id="btn-close" onclick="closeModal()" disabled>Закрыть</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- МОДАЛЬНОЕ ОКНО ПОЗДРАВЛЕНИЯ -->
+    <div class="modal-overlay" id="final-modal-overlay">
+        <div class="modal" style="max-width: 500px; padding: 40px 30px;">
+            <div class="final-badge" id="final-emoji">🌍</div>
+            <h2>🎉 Викторина завершена!</h2>
+            <p style="font-size: 1.1rem; margin: 15px 0 5px 0; color: #546e7a;">Ваше почетное звание:</p>
+            <div class="final-rank" id="final-rank-name">Магистр Энергосбережения</div>
+            <p style="font-size: 1.2rem; color: #263238; margin-bottom: 25px;">
+                Вы набрали: <strong style="color: var(--primary-color); font-size: 1.4rem;" id="final-score-val">0</strong> баллов!
+            </p>
+            <button class="action-btn btn-check" style="width: 100%; padding: 12px;" onclick="closeFinalAndReset()">🔄 Играть ещё раз</button>
+        </div>
+    </div>
+
+    <script>
+        const quizData = [
+            {
+                category: "Энергия дома",
+                questions: {
+                    100: { q: "Какая латинская буква на маркировке техники обозначает самый экономный класс энергопотребления?", a: ["A (или A+++)", "G", "F", "C"], correct: 0, text: "Класс А (и его подклассы А+, А++, А+++) — самые экономичные. Класс G — самый расточительный." },
+                    200: { q: "Потребляют ли энергию зарядные устройства для телефонов, оставленные в розетке без телефона?", a: ["Нет, цепь ведь разомкнута", "Да, они продолжают расходовать энергию", "Только если они нагреваются", "Только первые 5 минут"], correct: 1, text: "Да, блок питания содержит трансформатор, который потребляет немного электричества, пока включен в сеть. Это называют «током вампира»." },
+                    300: { q: "Где на кухне лучше всего поставить холодильник для экономии энергии?", a: ["Рядом с плитой или батареей", "В самом темном углу", "Подальше от источников тепла и прямых солнечных лучей", "Прямо у окна"], correct: 2, text: "Если поставить холодильник рядом с плитой, ему придется тратить в разы больше энергии, чтобы поддерживать холод внутри." },
+                    400: { q: "Какое простое действие при кипячении воды в электрочайнике сэкономит больше всего электричества?", a: ["Наливать ровно столько воды, сколько нужно сейчас", "Всегда наливать полный чайник", "Накрывать чайник полотенцем", "Кипятить воду два раза подряд"], correct: 0, text: "Чем больше лишней воды вы греете, тем больше киловатт расходуется впустую. Грейте столько, сколько собираетесь выпить!" },
+                    500: { q: "Сколько процентов электроэнергии тратится впустую, если регулярно не очищать чайник от накипи?", a: ["Около 2%", "Около 10-15%", "До 30%", "Накипь не влияет на энергию"], correct: 2, text: "Накипь обладает очень плохой теплопроводностью. Чайник сначала долго греет слой накипи, и только потом — воду. Потери достигают 30%." }
+                }
+            },
+            {
+                category: "Вода — это жизнь",
+                questions: {
+                    100: { q: "Какое устройство на кране смешивает воду с воздухом и снижает её расход в два раза?", a: ["Фильтр", "Аэратор", "Удлинитель", "Магнитный замок"], correct: 1, text: "Аэратор разбивает струю на мелкие капли. Визуально напор остается сильным, но воды выливается в два раза меньше." },
+                    200: { q: "Что экономичнее с точки зрения потребления воды: принять душ или набрать полную ванну?", a: ["Полная ванна", "Принять быстрый душ (до 5 минут)", "Расход одинаковый", "Зависит от температуры воды"], correct: 1, text: "На ванну уходит около 150–200 литров воды, а на 5-минутный душ — всего 40–50 литров." },
+                    300: { q: "Сколько литров воды в сутки может утекать из-за одного слегка подтекающего сливного бачка?", a: ["До 5 литров", "До 20 литров", "До 200 литров", "Вода в бачке не может течь сама"], correct: 2, text: "Из-за незаметной неисправности клапана в унитазе в канализацию за сутки может утечь до 200 литров чистой питьевой воды." },
+                    400: { q: "Как правильно и экономно мыть овощи и фрукты?", a: ["Под сильной проточной струей", "В глубокой миске или раковине с закрытым сливом, а затем сполоснуть", "Овощи вообще можно не мыть", "Мыть под горячей водой"], correct: 1, text: "Мытье в емкости экономит десятки литров чистой воды по сравнению с постоянно включенным краном." },
+                    500: { q: "Какая технология в современных стиральных машинах помогает экономить воду?", a: ["Автоматическое взвешивание белья", "Быстрый отжим", "Красивая подсветка", "Звуковой сигнал окончания"], correct: 0, text: "Умные машины взвешивают одежду и набирают ровно столько воды, сколько нужно для этого объема ткани, предотвращая перерасход." }
+                }
+            },
+            {
+                category: "Умные технологии",
+                questions: {
+                    100: { q: "Какие лампы являются самыми экономичными и долговечными на сегодняшний день?", a: ["Лампы накаливания", "Галогенные лампы", "Светодиодные (LED)", "Неоновые трубки"], correct: 2, text: "LED-лампы потребляют почти в 8-10 раз меньше энергии, чем старые лампы с вольфрамовой нитью, и служат до 10-15 лет." },
+                    200: { q: "Из какого неисчерпаемого источника получают энергию солнечные батареи?", a: ["Из тепла земного ядра", "Из солнечного света (фотонов)", "Из космического мусора", "Из ветра"], correct: 1, text: "Солнечные панели превращают энергию фотонов света напрямую в электрический ток благодаря полупроводникам." },
+                    300: { q: "Зачем в «Умных домах» устанавливают датчики движения для управления светом?", a: ["Чтобы пугать воров", "Чтобы свет автоматически выключался, когда в комнате никого нет", "Для красоты", "Чтобы лампочки горели ярче"], correct: 1, text: "Датчики движения гарантируют, что свет не будет гореть в пустых коридорах, классах или комнатах, если кто-то забыл нажать выключатель." },
+                    400: { q: "Как называется устройство, которое использует тепло ветра для генерации электричества?", a: ["Гидротурбина", "Ветрогенератор (ветряк)", "Тепловой насос", "Солнечный коллектор"], correct: 1, text: "Ветрогенераторы преобразуют кинетическую энергию ветра в механическую энергию вращения, а затем в электричество." },
+                    500: { q: "Что такое «умная розетка»?", a: ["Розетка, которая умеет говорить", "Розетка с дистанционным управлением и таймером выключения через интернет", "Розетка, защищающая от брызг воды", "Розетка, которая сама чинит приборы"], correct: 1, text: "Умную розетку можно выключить со смартфона из любой точки мира или настроить так, чтобы она обесточивала приборы ночью." }
+                }
+            },
+            {
+                category: "Эко-привычки",
+                questions: {
+                    100: { q: "Зачем нужно разделять домашний мусор (пластик, стекло, бумагу)?", a: ["Чтобы его было интереснее выбрасывать", "Для последующей переработки и сохранения ресурсов", "Этого требуют правила магазина", "Чтобы мусор занимал меньше места"], correct: 1, text: "Раздельный сбор позволяет вернуть материалы в производство. Из старых газет делают тетради, а из бутылок — флисовые кофты!" },
+                    200: { q: "Какой предмет лучше использовать при походах в магазин вместо пластиковых пакетов?", a: ["Новый пластиковый пакет", "Тканевую эко-сумку (шоппер)", "Бумажную коробку", "Ничего не использовать, нести в руках"], correct: 1, text: "Одна тканевая сумка заменяет сотни пластиковых пакетов, которые разлагаются веками и затрязняют океаны." },
+                    300: { q: "Сколько времени в природе разлагается обычная пластиковая бутылка?", a: ["Около 1 года", "Около 10 лет", "Около 100-150 лет", "Около 400-500 лет"], correct: 3, text: "Пластик практически не уничтожается природным путем, он лишь распадается на опасный микропластик. Время разложения бутылки — до 500 лет." },
+                    400: { q: "Какая бумага наносит меньше вреда экологии при производстве?", a: ["Белоснежная глянцевая бумага", "Бумага из вторичного сырья (макулатуры)", "Цветная ламинированная бумага", "Бумага, присланная самолетом"], correct: 1, text: "Производство бумаги из макулатуры спасает деревья от вырубки, требует в 2 раза меньше энергии и на 35% меньше воды." },
+                    500: { q: "Что такое «фудшеринг» и осознанное потребление еды?", a: ["Поедание фастфуда на скорость", "Спасение пригодных продуктов питания от выбрасывания и распределение их среди тех, кому они нужны", "Диета на воде", "Покупка продуктов только в больших упаковках"], correct: 1, text: "Около трети всей еды в мире выбрасывается. Фудшеринг помогает беречь ресурсы, затраченные на выращивание и доставку пищи." }
+                }
+            },
+            {
+                category: "Мифы и факты",
+                questions: {
+                    100: { q: "Миф или факт: Частое включение и выключение светодиодной лампы тратит больше энергии, чем если бы она горела постоянно?", a: ["Факт, при запуске идет огромный скачок", "Миф, современные лампы тратят минимум энергии на включение", "Это правда только для синих ламп", "Зависит от погоды"], correct: 1, text: "Это миф. Светодиодные лампы включаются мгновенно и не требуют дополнительной энергии на старт. Уходя — гасите свет!" },
+                    200: { q: "Миф или факт: Замена обычных окон на качественные стеклопакеты помогает экономить электричество?", a: ["Миф, окна связаны только с теплом, а не со светом", "Факт, они удерживают тепло, уменьшая работу обогревателей и кондиционеров", "Только если окна тонированные", "Окна никак не влияют на ресурсы"], correct: 1, text: "Эток факт. До 40% тепла зимой уходит через щели в окнах. Хорошие окна сохраняют климат, снижая расходы на обогрев." },
+                    300: { q: "Миф или факт: Зарядка телефона за ночь расходует столько же энергии, сколько за пару часов?", a: ["Миф, после 100% процесс полностью останавливается без потерь", "Факт, телефон продолжает потреблять микротоки для поддержания 100% заряда", "Телефон ночью вообще не заряжается", "Зависит от модели чехла"], correct: 1, text: "Факт. Оставляя телефон на всю ночь, вы тратите лишнюю энергию: устройство микропорциями подзаряжается каждый раз, когда заряд падает до 99%." },
+                    400: { q: "Миф или факт: Мытье посуды вручную под проточной водой экономичнее, чем в посудомоечной машине?", a: ["Факт, машина тратит слишком много света и воды", "Миф, посудомойка расходует в 3-5 раз меньше воды за счет круговорота и фильтрации", "Одинаково", "Экономичнее вообще не мыть посуду"], correct: 1, text: "Это миф. Машина расходует около 10 литров на целый набор посуды, в то время как при ручной мойке под краном выливается до 50 литров." },
+                    500: { q: "Миф или факт: Если занавесить батарею плотными шторами, в комнате станет теплее?", a: ["Факт, шторы не пустят холод от окна", "Миф, шторы перекроют тепло от батареи, и оно уйдёт в стену и окно", "Теплее станет только шторам", "Ничего не изменится"], correct: 1, text: "Это миф. Плотные шторы изолируют батарею, тепло идет к холодному стеклу, а комната остывает. Зимой лучше заправлять шторы за батарею." }
+                }
+            }
+        ];
+
+        let totalScore = 0;
+        let playedCellsCount = 0;
+        let currentActiveQuestion = null;
+        let selectedOptionIdx = null;
+
+        let timerInterval = null;
+        let timeLeft = 15;
+        function playSound(type) {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContext) return;
+            const ctx = new AudioContext();
+            
+            if (type === 'correct' || type === 'victory') {
+                let osc = ctx.createOscillator();
+                let gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(523.25, ctx.currentTime);
+                osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.12);
+                if (type === 'victory') osc.frequency.setValueAtTime(783.99, ctx.currentTime + 0.24);
+                gain.gain.setValueAtTime(0.2, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+                osc.connect(gain); gain.connect(ctx.destination);
+                osc.start(); osc.stop(ctx.currentTime + 0.5);
+            } else if (type === 'wrong') {
+                let osc = ctx.createOscillator();
+                let gain = ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(140, ctx.currentTime);
+                osc.frequency.linearRampToValueAtTime(90, ctx.currentTime + 0.3);
+                gain.gain.setValueAtTime(0.15, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+                osc.connect(gain); gain.connect(ctx.destination);
+                osc.start(); osc.stop(ctx.currentTime + 0.3);
+            } else if (type === 'click') {
+                let osc = ctx.createOscillator();
+                let gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(450, ctx.currentTime);
+                gain.gain.setValueAtTime(0.05, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.05);
+                osc.connect(gain); gain.connect(ctx.destination);
+                osc.start(); osc.stop(ctx.currentTime + 0.05);
+            } else if (type === 'tick') {
+                let osc = ctx.createOscillator();
+                let gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(750, ctx.currentTime);
+                gain.gain.setValueAtTime(0.03, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.02);
+                osc.connect(gain); gain.connect(ctx.destination);
+                osc.start(); osc.stop(ctx.currentTime + 0.02);
+            }
+        }
+        function startTimer() {
+            timeLeft = 15;
+            document.getElementById('timer-container').style.display = 'block';
+            const bar = document.getElementById('timer-bar');
+            const txt = document.getElementById('timer-seconds');
+            
+            bar.style.width = '100%';
+            bar.style.backgroundColor = '#4caf50';
+            txt.innerText = timeLeft;
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                txt.innerText = timeLeft;
+                bar.style.width = (timeLeft / 15 * 100) + '%';
+
+                playSound('tick');
+
+                if (timeLeft <= 8 && timeLeft > 3) {
+                    bar.style.backgroundColor = '#ffeb3b';
+                } else if (timeLeft <= 3) {
+                    bar.style.backgroundColor = '#f44336';
+                }
+
+                if (timeLeft <= 0) {
+                    handleTimeOut();
+                }
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+        }
+
+        function initBoard() {
+            const board = document.getElementById('game-board');
+            board.innerHTML = ''; 
+            playedCellsCount = 0;
+
+            const corner = document.createElement('div');
+            corner.className = 'grid-header';
+            corner.innerText = '📋 Темы / Очки';
+            board.appendChild(corner);
+
+            const pointsText = "100,200,300,400,500";
+            const points = pointsText.split(',').map(Number);
+
+            points.forEach(p => {
+                const header = document.createElement('div');
+                header.className = 'grid-header';
+                header.innerText = `${p} 💎`;
+                board.appendChild(header);
+            });
+
+            quizData.forEach((catData, catIdx) => {
+                const catHeader = document.createElement('div');
+                catHeader.className = 'grid-header';
+                catHeader.style.background = '#37474f';
+                catHeader.innerText = catData.category;
+                board.appendChild(catHeader);
+
+                points.forEach(p => {
+                    const cell = document.createElement('div');
+                    cell.className = 'point-cell';
+                    cell.innerText = p;
+                    cell.id = `cell-${catIdx}-${p}`;
+                    cell.onclick = () => openQuestion(catIdx, p);
+                    board.appendChild(cell);
+                });
+            });
+
+            updateScoreDisplay();
+        }
+        function switchTab(tabName) {
+            playSound('click');
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+            if (tabName === 'game') {
+                document.getElementById('btn-tab-game').classList.add('active');
+                document.getElementById('tab-game').classList.add('active');
+            } else if (tabName === 'author') {
+                document.getElementById('btn-tab-author').classList.add('active');
+                document.getElementById('tab-author').classList.add('active');
+            } else {
+                document.getElementById('btn-tab-info').classList.add('active');
+                document.getElementById('tab-info').classList.add('active');
+            }
+        }
+
+        function openQuestion(catIdx, points) {
+            const cell = document.getElementById(`cell-${catIdx}-${points}`);
+            if (cell.classList.contains('disabled')) return;
+            playSound('click');
+
+            const qInfo = quizData[catIdx].questions[points];
+            currentActiveQuestion = { catIdx, points, ...qInfo };
+            selectedOptionIdx = null;
+
+            document.getElementById('modal-topic').innerText = `${quizData[catIdx].category} — ${points} очков`;
+            document.getElementById('modal-question').innerText = qInfo.q;
+            document.getElementById('explanation-box').style.display = 'none';
+            document.getElementById('btn-check').disabled = true;
+            document.getElementById('btn-hint').style.display = 'inline-block';
+            
+            // ПРИНУДИТЕЛЬНАЯ БЛОКИРОВКА ЗАКРЫТИЯ ОКНА ДО ОТВЕТА
+            document.getElementById('btn-close').disabled = true;
+
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+
+            qInfo.a.forEach((optionText, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = optionText;
+                btn.onclick = () => selectOption(idx, btn);
+                optionsContainer.appendChild(btn);
+            });
+
+            document.getElementById('modal-overlay').classList.add('active');
+            startTimer();
+        }
+
+        function selectOption(idx, element) {
+            playSound('click');
+            document.querySelectorAll('.option-btn').forEach(b => b.style.borderColor = '#d1e7dd');
+            element.style.borderColor = 'var(--accent-color)';
+            selectedOptionIdx = idx;
+            document.getElementById('btn-check').disabled = false;
+        }
+
+        function checkSelectedAnswer() {
+            if (selectedOptionIdx === null) return;
+            stopTimer();
+            document.getElementById('timer-container').style.display = 'none';
+
+            const q = currentActiveQuestion;
+            const options = document.querySelectorAll('.option-btn');
+            const cell = document.getElementById(`cell-${q.catIdx}-${q.points}`);
+            options.forEach(b => b.disabled = true);
+            cell.classList.add('disabled');
+
+            if (selectedOptionIdx === q.correct) {
+                playSound('correct');
+                options[selectedOptionIdx].classList.add('correct');
+                totalScore += q.points;
+                cell.classList.add('cell-correct');
+                cell.innerText = q.points + ' ✔️';
+            } else {
+                playSound('wrong');
+                options[selectedOptionIdx].classList.add('wrong');
+                options[q.correct].classList.add('correct');
+                cell.classList.add('cell-wrong');
+                cell.innerText = '❌';
+            }
+
+            document.getElementById('explanation-text').innerText = q.text;
+            document.getElementById('explanation-box').style.display = 'block';
+
+            // РАЗБЛОКИРОВКА КНОПКИ ЗАКРЫТИЯ ПОСЛЕ ОТВЕТА
+            document.getElementById('btn-close').disabled = false;
+
+            playedCellsCount++;
+            updateScoreDisplay();
+            document.getElementById('btn-check').disabled = true;
+            document.getElementById('btn-hint').style.display = 'none';
+            
+            if (playedCellsCount >= 25) {
+                setTimeout(showFinalCelebrationScreen, 1500);
+            }
+        }
+        function handleTimeOut() {
+            stopTimer();
+            document.getElementById('timer-container').style.display = 'none';
+            playSound('wrong');
+
+            const q = currentActiveQuestion;
+            const options = document.querySelectorAll('.option-btn');
+            const cell = document.getElementById(`cell-${q.catIdx}-${q.points}`);
+            
+            options.forEach(b => b.disabled = true);
+            options[q.correct].classList.add('correct');
+
+            cell.classList.add('disabled');
+            cell.classList.add('cell-wrong');
+            cell.innerText = '⏱️';
+
+            document.getElementById('modal-question').innerText = "⏱️ Время вышло! " + document.getElementById('modal-question').innerText;
+            document.getElementById('explanation-text').innerText = "Вы не успели ответить за 15 секунд. " + q.text;
+            document.getElementById('explanation-box').style.display = 'block';
+
+            // РАЗБЛОКИРОВКА КНОПКИ ЗАКРЫТИЯ ПОСЛЕ ИСТЕЧЕНИЯ ТАЙМЕРА
+            document.getElementById('btn-close').disabled = false;
+
+            playedCellsCount++;
+            updateScoreDisplay();
+            document.getElementById('btn-check').disabled = true;
+            document.getElementById('btn-hint').style.display = 'none';
+
+            if (playedCellsCount >= 25) {
+                setTimeout(showFinalCelebrationScreen, 1500);
+            }
+        }
+
+        function showAnswer() {
+            stopTimer();
+            document.getElementById('timer-container').style.display = 'none';
+            playSound('click');
+            
+            const q = currentActiveQuestion;
+            const options = document.querySelectorAll('.option-btn');
+            const cell = document.getElementById(`cell-${q.catIdx}-${q.points}`);
+
+            options.forEach(b => b.disabled = true);
+            options[q.correct].classList.add('correct');
+
+            document.getElementById('explanation-text').innerText = q.text;
+            document.getElementById('explanation-box').style.display = 'block';
+
+            cell.classList.add('disabled');
+            cell.classList.add('cell-wrong');
+            cell.innerText = '👀';
+
+            // РАЗБЛОКИРОВКА КНОПКИ ЗАКРЫТИЯ ПОСЛЕ ИСПОЛЬЗОВАНИЯ ПОДСКАЗКИ
+            document.getElementById('btn-close').disabled = false;
+
+            playedCellsCount++;
+            updateScoreDisplay();
+            document.getElementById('btn-check').disabled = true;
+            document.getElementById('btn-hint').style.display = 'none';
+
+            if (playedCellsCount >= 25) {
+                setTimeout(showFinalCelebrationScreen, 1500);
+            }
+        }
+
+        function showFinalCelebrationScreen() {
+            closeModal();
+            playSound('victory');
+            
+            let rank = "Эко-Новичок 🌱";
+            let emoji = "🌱";
+            
+            if (totalScore >= 4000 && totalScore <= 7000) {
+                rank = "Хранитель Ресурсов ⚡";
+                emoji = "⚡";
+            } else if (totalScore > 7000) {
+                rank = "Магистр Энергосбережения 🌍";
+                emoji = "🌍";
+            }
+            
+            document.getElementById('final-emoji').innerText = emoji;
+            document.getElementById('final-rank-name').innerText = rank;
+            document.getElementById('final-score-val').innerText = totalScore;
+            document.getElementById('final-modal-overlay').classList.add('active');
+        }
+
+        function closeFinalAndReset() {
+            playSound('click');
+            document.getElementById('final-modal-overlay').classList.remove('active');
+            totalScore = 0;
+            initBoard();
+        }
+
+        function closeModal() {
+            // Кнопка сработает только в случае снятия disabled в JS
+            stopTimer();
+            playSound('click');
+            document.getElementById('modal-overlay').classList.remove('active');
+            currentActiveQuestion = null;
+        }
+
+        function updateScoreDisplay() {
+            document.getElementById('total-score').innerText = totalScore;
+        }
+
+        function resetGame() {
+            if (confirm("Вы уверены, что хотите сбросить текущий результат и начать заново?")) {
+                totalScore = 0;
+                initBoard();
+            }
+        }
+
+        window.onload = initBoard;
+    </script>
+</body>
+</html>
+
+
